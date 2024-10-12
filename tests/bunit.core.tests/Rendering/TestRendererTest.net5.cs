@@ -24,6 +24,7 @@ public partial class TestRendererTest : TestContext
 			Services.GetService<IRenderedComponentActivator>(),
 			Services,
 			NullLoggerFactory.Instance,
+			Services.GetRequiredService<ComponentRegistry>(),
 			activatorMock);
 
 		renderer.RenderComponent<Wrapper>(new ComponentParameterCollection());

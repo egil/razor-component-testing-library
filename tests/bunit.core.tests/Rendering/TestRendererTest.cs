@@ -519,6 +519,7 @@ public partial class TestRendererTest : TestContext
 	private ITestRenderer CreateRenderer() => new WebTestRenderer(
 		Services.GetRequiredService<IRenderedComponentActivator>(),
 		Services,
+		Services.GetRequiredService<ComponentRegistry>(),
 		NullLoggerFactory.Instance);
 
 	internal sealed class LifeCycleMethodInvokeCounter : ComponentBase

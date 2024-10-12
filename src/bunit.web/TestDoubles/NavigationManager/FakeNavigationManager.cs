@@ -1,4 +1,5 @@
 using Bunit.Rendering;
+using Bunit.TestDoubles.Router;
 using Microsoft.AspNetCore.Components.Routing;
 
 namespace Bunit.TestDoubles;
@@ -72,6 +73,7 @@ public sealed class FakeNavigationManager : NavigationManager
 	/// <inheritdoc/>
 	protected override void NavigateToCore(string uri, NavigationOptions options)
 	{
+		_ = uri ?? throw new ArgumentNullException(nameof(uri));
 		var absoluteUri = GetNewAbsoluteUri(uri);
 		var changedBaseUri = HasDifferentBaseUri(absoluteUri);
 

@@ -1,5 +1,6 @@
 using Bunit.Extensions;
 using Bunit.Rendering;
+using Bunit.TestDoubles.Router;
 using Microsoft.Extensions.Logging;
 
 namespace Bunit;
@@ -9,6 +10,8 @@ namespace Bunit;
 /// </summary>
 public class TestContext : TestContextBase
 {
+	private FakeRouter? router;
+
 	/// <summary>
 	/// Gets bUnits JSInterop, that allows setting up handlers for <see cref="IJSRuntime.InvokeAsync{TValue}(string, object[])"/> invocations
 	/// that components under tests will issue during testing. It also makes it possible to verify that the invocations has happened as expected.
@@ -65,7 +68,13 @@ public class TestContext : TestContextBase
 	/// <returns>The <see cref="IRenderedComponent{TComponent}"/>.</returns>
 	public virtual IRenderedComponent<TComponent> Render<TComponent>(RenderFragment renderFragment)
 		where TComponent : IComponent
-		=> (IRenderedComponent<TComponent>)this.RenderInsideRenderTree<TComponent>(renderFragment);
+	{
+		// There has to be a better way of having this global thing initialized
+		// We can't do it in the ctor because we would "materialize" the container, and it would
+		// throw if the user tries to add a service after the ctor has run.
+		router ??= Services.GetService<FakeRouter>();
+		return (IRenderedComponent<TComponent>)this.RenderInsideRenderTree<TComponent>(renderFragment);
+	}
 
 	/// <summary>
 	/// Renders the <paramref name="renderFragment"/> and returns it as a <see cref="IRenderedFragment"/>.
@@ -74,6 +83,17 @@ public class TestContext : TestContextBase
 	/// <returns>The <see cref="IRenderedFragment"/>.</returns>
 	public virtual IRenderedFragment Render(RenderFragment renderFragment)
 		=> (IRenderedFragment)this.RenderInsideRenderTree(renderFragment);
+
+	/// <inheritdoc/>
+	protected override void Dispose(bool disposing)
+	{
+		if (disposing)
+		{
+			router?.Dispose();
+		}
+
+		base.Dispose(disposing);
+	}
 
 	/// <summary>
 	/// Dummy method required to allow Blazor's compiler to generate
@@ -86,13 +106,14 @@ public class TestContext : TestContextBase
 	{
 		var renderedComponentActivator = Services.GetRequiredService<IRenderedComponentActivator>();
 		var logger = Services.GetRequiredService<ILoggerFactory>();
+		var componentRegistry = Services.GetRequiredService<ComponentRegistry>();
 #if !NET5_0_OR_GREATER
-		return new WebTestRenderer(renderedComponentActivator, Services, logger);
+		return new WebTestRenderer(renderedComponentActivator, Services, componentRegistry, logger);
 #else
 		var componentActivator = Services.GetService<IComponentActivator>();
 		return componentActivator is null
-			? new WebTestRenderer(renderedComponentActivator, Services, logger)
-			: new WebTestRenderer(renderedComponentActivator, Services, logger, componentActivator);
+			? new WebTestRenderer(renderedComponentActivator, Services, componentRegistry, logger)
+			: new WebTestRenderer(renderedComponentActivator, Services, componentRegistry, logger, componentActivator);
 #endif
 
 	}

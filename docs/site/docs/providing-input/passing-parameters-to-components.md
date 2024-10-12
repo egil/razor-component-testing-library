@@ -501,6 +501,41 @@ A simple example of how to test a component that receives parameters from the qu
 }
 ```
 
+## Setting parameters via routing
+In Blazor, components can receive parameters via routing. This is particularly useful for passing data to components based on the URL. To enable this, the component parameters need to be annotated with the `[Parameter]` attribute and the `@page` directive (or `RouteAttribute` in code behind files).
+
+An example component that receives parameters via routing:
+
+```razor
+@page "/counter/{initialCount:int}"
+
+<p>Count: @InitialCount</p>
+
+@code {
+  [Parameter]
+  public int InitialCount { get; set; }
+}
+```
+
+To test a component that receives parameters via routing, set the parameters using the `NavigationManager`:
+
+```razor
+@inherits TestContext
+
+@code {
+  [Fact]
+  public void Component_receives_parameters_from_route()
+  {
+    var cut = RenderComponent<ExampleComponent>();
+    var navigationManager = Services.GetRequiredService<NavigationManager>();
+
+    navigationManager.NavigateTo("/counter/123");    
+
+    cut.Find("p").TextContent.ShouldBe("Count: 123");
+  }
+}
+```
+
 ## Further Reading
 
 - <xref:inject-services>
