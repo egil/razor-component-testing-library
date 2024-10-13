@@ -1,6 +1,6 @@
 namespace Bunit.TestDoubles;
 
-public class RouterTests : TestContext
+public partial class RouterTests : TestContext
 {
 	[Fact]
 	public void NavigatingToRouteWithPageAttributeShouldSetParameters()
@@ -71,92 +71,25 @@ public class RouterTests : TestContext
 		cut.Find("p").TextContent.ShouldBe(expectedTextContent);
 	}
 	
-	[Route("/page/{count:int}/{name}")]
-	private sealed class ComponentWithPageAttribute : ComponentBase
+	[Fact]
+	public void ComponentThatNavigatesToSelfOnClickShouldBeUpdated()
 	{
-		[Parameter] public int Count { get; set; }
-		[Parameter] public string Name { get; set; }
-		protected override void BuildRenderTree(RenderTreeBuilder builder)
-		{
-			builder.OpenElement(0, "p");
-			builder.AddContent(1, Count);
-			builder.AddContent(2, " / ");
-			builder.AddContent(3, Name);
-			builder.CloseElement();
-		}
-	}
-	
-	[Route("/page")]
-	[Route("/page/{count:int}")]
-	private sealed class ComponentWithMultiplePageAttributes : ComponentBase
-	{
-		[Parameter] public int Count { get; set; }
-		protected override void BuildRenderTree(RenderTreeBuilder builder)
-		{
-			builder.OpenElement(0, "p");
-			builder.AddContent(1, Count);
-			builder.CloseElement();
-		}
-	}
-	
-	[Route("/page/{count:int}")]
-	private sealed class ComponentWithOtherParameters : ComponentBase
-	{
-		[Parameter] public int Count { get; set; }
-		[Parameter] public int OtherNumber { get; set; }
-		
-		protected override void BuildRenderTree(RenderTreeBuilder builder)
-		{
-			builder.OpenElement(0, "p");
-			builder.AddContent(1, Count);
-			builder.AddContent(2, "/");
-			builder.AddContent(3, OtherNumber);
-			builder.CloseElement();
-		}
-	}
-	
-	[Route("/page/{*pageRoute}")]
-	private sealed class ComponentWithCatchAllRoute : ComponentBase
-	{
-		[Parameter] public string PageRoute { get; set; }
-		
-		protected override void BuildRenderTree(RenderTreeBuilder builder)
-		{
-			builder.OpenElement(0, "p");
-			builder.AddContent(1, PageRoute);
-			builder.CloseElement();
-		}
-	}
-	
-	[Route("/page/{count:int}")]
-	private sealed class ComponentWithCustomOnParametersSetAsyncsCall : ComponentBase
-	{
-		[Parameter] public int Count { get; set; }
-		[Parameter] public int IncrementOnParametersSet { get; set; }
+		var cut = RenderComponent<ComponentThatNavigatesToSelfOnButtonClick>();
 
-		protected override void OnParametersSet()
-		{
-			Count += IncrementOnParametersSet;
-		}
+		cut.Find("button").Click();
 
-		protected override void BuildRenderTree(RenderTreeBuilder builder)
-		{
-			builder.OpenElement(0, "p");
-			builder.AddContent(1, Count);
-			builder.CloseElement();
-		}
+		cut.Find("p").TextContent.ShouldBe("1");
 	}
 	
-	[Route("/page/{count?:int}")]
-	private sealed class ComponentWithOptionalParameter : ComponentBase
+#if NET7_0_OR_GREATER
+	[Fact]
+	public void ComponentThatInterceptsNavigationShouldNotBeUpdated()
 	{
-		[Parameter] public int? Count { get; set; }
-		
-		protected override void BuildRenderTree(RenderTreeBuilder builder)
-		{
-			builder.OpenElement(0, "p");
-			builder.AddContent(1, Count);
-			builder.CloseElement();
-		}
+		var cut = RenderComponent<ComponentThatNavigatesToSelfOnButtonClickIntercepted>();
+
+		cut.Find("button").Click();
+
+		cut.Find("p").TextContent.ShouldBe("0");
 	}
+#endif
 }
