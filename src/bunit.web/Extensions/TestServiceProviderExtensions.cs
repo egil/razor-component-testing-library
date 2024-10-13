@@ -1,7 +1,6 @@
 using Bunit.Diffing;
 using Bunit.Rendering;
 using Bunit.TestDoubles;
-using Bunit.TestDoubles.Router;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Routing;
@@ -46,9 +45,7 @@ public static class TestServiceProviderExtensions
 		services.AddSingleton<FakeWebAssemblyHostEnvironment>();
 		services.AddSingleton<IWebAssemblyHostEnvironment>(s => s.GetRequiredService<FakeWebAssemblyHostEnvironment>());
 
-		// bUnits fake Router
-		services.AddSingleton<FakeRouter>();
-
+		services.AddSingleton<ComponentRouteParameterService>();
 		services.AddSingleton<ComponentRegistry>();
 
 #if NET8_0_OR_GREATER

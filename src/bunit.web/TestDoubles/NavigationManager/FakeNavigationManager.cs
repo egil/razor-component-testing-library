@@ -1,5 +1,4 @@
 using Bunit.Rendering;
-using Bunit.TestDoubles.Router;
 using Microsoft.AspNetCore.Components.Routing;
 
 namespace Bunit.TestDoubles;
@@ -13,6 +12,7 @@ using URI = Uri;
 public sealed class FakeNavigationManager : NavigationManager
 {
 	private readonly TestContextBase testContextBase;
+	private readonly ComponentRouteParameterService componentRouteParameterService;
 	private readonly Stack<NavigationHistory> history = new();
 
 	/// <summary>
@@ -28,9 +28,10 @@ public sealed class FakeNavigationManager : NavigationManager
 	/// Initializes a new instance of the <see cref="FakeNavigationManager"/> class.
 	/// </summary>
 	[SuppressMessage("Minor Code Smell", "S1075:URIs should not be hardcoded", Justification = "By design. Fake navigation manager defaults to local host as base URI.")]
-	public FakeNavigationManager(TestContextBase testContextBase)
+	public FakeNavigationManager(TestContextBase testContextBase, ComponentRouteParameterService componentRouteParameterService)
 	{
 		this.testContextBase = testContextBase;
+		this.componentRouteParameterService = componentRouteParameterService;
 		Initialize("http://localhost/", "http://localhost/");
 	}
 
@@ -65,6 +66,8 @@ public sealed class FakeNavigationManager : NavigationManager
 			{
 				BaseUri = GetBaseUri(absoluteUri);
 			}
+
+			componentRouteParameterService.UpdateComponentsWithRouteParameters(absoluteUri);
 		});
 	}
 #endif
@@ -131,6 +134,8 @@ public sealed class FakeNavigationManager : NavigationManager
 			{
 				BaseUri = GetBaseUri(absoluteUri);
 			}
+
+			componentRouteParameterService.UpdateComponentsWithRouteParameters(absoluteUri);
 		});
 	}
 #endif

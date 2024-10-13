@@ -1,27 +1,32 @@
 using System.Globalization;
 using System.Reflection;
 using Bunit.Rendering;
-using Microsoft.AspNetCore.Components.Routing;
 
-namespace Bunit.TestDoubles.Router;
+namespace Bunit.TestDoubles;
 
-internal sealed class FakeRouter : IDisposable
+/// <summary>
+/// This is an internal service that is used to update components with route parameters.
+/// It is not meant to be used outside bUnit internal classes.
+/// </summary>
+public sealed class ComponentRouteParameterService
 {
-	private readonly NavigationManager navigationManager;
 	private readonly ComponentRegistry componentRegistry;
 
-	public FakeRouter(NavigationManager navigationManager, ComponentRegistry componentRegistry)
+	/// <summary>
+	/// Initializes a new instance of the <see cref="ComponentRouteParameterService"/> class.
+	/// </summary>
+	public ComponentRouteParameterService(ComponentRegistry componentRegistry)
 	{
-		this.navigationManager = navigationManager;
 		this.componentRegistry = componentRegistry;
-		navigationManager.LocationChanged += UpdatePageParameters;
 	}
 
-	public void Dispose() => navigationManager.LocationChanged -= UpdatePageParameters;
-
-	private void UpdatePageParameters(object? sender, LocationChangedEventArgs e)
+	/// <summary>
+	/// Triggers the components to update their parameters based on the route parameters.
+	/// </summary>
+	public void UpdateComponentsWithRouteParameters(Uri uri)
 	{
-		var uri = new Uri(e.Location);
+		_ = uri ?? throw new ArgumentNullException(nameof(uri));
+
 		var relativeUri = uri.PathAndQuery;
 
 		foreach (var instance in componentRegistry.Components)
