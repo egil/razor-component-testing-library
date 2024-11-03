@@ -1,6 +1,11 @@
 using System.Globalization;
 using System.Reflection;
 using Bunit.Rendering;
+#if NET6_0_OR_GREATER
+using ParameterViewDictionary = System.Collections.Generic.Dictionary<string, object?>;
+#else
+using ParameterViewDictionary = System.Collections.Generic.Dictionary<string, object>;
+#endif
 
 namespace Bunit.TestDoubles;
 
@@ -40,69 +45,58 @@ public sealed class ComponentRouteParameterService
 
 			foreach (var template in routeAttributes.Select(r => r.Template))
 			{
-				var templateSegments = template.Trim('/').Split("/");
-				var uriSegments = relativeUri.Trim('/').Split("/");
-
-				if (templateSegments.Length > uriSegments.Length)
+				var parameters = GetParametersFromTemplateAndUri(template, relativeUri, instance);
+				if (parameters.Count > 0)
 				{
-					continue;
+					instance.SetParametersAsync(ParameterView.FromDictionary(parameters));
 				}
-#if NET6_0_OR_GREATER
-				var parameters = new Dictionary<string, object?>();
-#else
-				var parameters = new Dictionary<string, object>();
-#endif
-
-				for (var i = 0; i < templateSegments.Length; i++)
-				{
-					var templateSegment = templateSegments[i];
-					if (templateSegment.StartsWith('{') && templateSegment.EndsWith('}'))
-					{
-						var parameterName = GetParameterName(templateSegment);
-						var property = GetParameterProperty(instance, parameterName);
-
-						if (property is null)
-						{
-							continue;
-						}
-
-						var isCatchAllParameter = templateSegment[1] == '*';
-						if (!isCatchAllParameter)
-						{
-							parameters[property.Name] = GetValue(uriSegments[i], property);
-						}
-						else
-						{
-							parameters[parameterName] = string.Join("/", uriSegments.Skip(i));
-						}
-					}
-					else if (templateSegment != uriSegments[i])
-					{
-						break;
-					}
-				}
-
-				if (parameters.Count == 0)
-				{
-					continue;
-				}
-
-				// Shall we await this? This should be synchronous in most cases
-				// If not, very likely the user has overriden the SetParametersAsync method
-				// And should use WaitForXXX methods to await the desired state
-				instance.SetParametersAsync(ParameterView.FromDictionary(parameters));
 			}
 		}
 	}
 
-	private static RouteAttribute[] GetRouteAttributesFromComponent(IComponent instance)
-	{
-		var routeAttributes = instance
-			.GetType()
+	private static RouteAttribute[] GetRouteAttributesFromComponent(IComponent instance) =>
+		instance.GetType()
 			.GetCustomAttributes(typeof(RouteAttribute), true)
 			.Cast<RouteAttribute>()
 			.ToArray();
-		return routeAttributes;
+
+	private static ParameterViewDictionary GetParametersFromTemplateAndUri(string template, string relativeUri, IComponent instance)
+	{
+		var templateSegments = template.Trim('/').Split("/");
+		var uriSegments = relativeUri.Trim('/').Split("/");
+
+		if (templateSegments.Length > uriSegments.Length)
+		{
+			return [];
+		}
+
+		var parameters = new ParameterViewDictionary();
+
+		for (var i = 0; i < templateSegments.Length; i++)
+		{
+			var templateSegment = templateSegments[i];
+			if (templateSegment.StartsWith('{') && templateSegment.EndsWith('}'))
+			{
+				var parameterName = GetParameterName(templateSegment);
+				var property = GetParameterProperty(instance, parameterName);
+
+				if (property is null)
+				{
+					continue;
+				}
+
+				var isCatchAllParameter = templateSegment[1] == '*';
+				parameters[property.Name] = isCatchAllParameter
+					? string.Join("/", uriSegments.Skip(i))
+					: GetValue(uriSegments[i], property);
+			}
+			else if (templateSegment != uriSegments[i])
+			{
+				return [];
+			}
+		}
+
+		return parameters;
 	}
 
 	private static string GetParameterName(string templateSegment) =>
