@@ -21,7 +21,10 @@ public static class TestContextBaseRenderExtensions
 			throw new ArgumentNullException(nameof(testContext));
 
 		var baseResult = RenderInsideRenderTree(testContext, renderFragment);
-		return testContext.Renderer.FindComponent<TComponent>(baseResult);
+		var component = testContext.Renderer.FindComponent<TComponent>(baseResult);
+		var registry = testContext.Services.GetRequiredService<ComponentRegistry>();
+		registry.Register(component.Instance);
+		return component;
 	}
 
 	/// <summary>

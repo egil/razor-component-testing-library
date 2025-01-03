@@ -27,7 +27,8 @@ All notable changes to **bUnit** will be documented in this file. The project ad
 ### Added
 
 - Extension packages (`bunit.generators` and `bunit.web.query`) are flagged as stable.
-
+- Implemented feature to map route templates to parameters using NavigationManager. This allows parameters to be set based on the route template when navigating to a new location. Reported by [JamesNK](https://github.com/JamesNK) in [#1580](https://github.com/bUnit-dev/bUnit/issues/1580). By [@linkdotnet](https://github.com/linkdotnet).
+- 
 ## [1.34.0] - 2024-11-01
 
 ### Fixed

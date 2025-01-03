@@ -64,8 +64,8 @@ public class TestContext : TestContextBase
 	/// <param name="renderFragment">The render fragment to render.</param>
 	/// <returns>The <see cref="IRenderedComponent{TComponent}"/>.</returns>
 	public virtual IRenderedComponent<TComponent> Render<TComponent>(RenderFragment renderFragment)
-		where TComponent : IComponent
-		=> (IRenderedComponent<TComponent>)this.RenderInsideRenderTree<TComponent>(renderFragment);
+		where TComponent : IComponent =>
+		(IRenderedComponent<TComponent>)this.RenderInsideRenderTree<TComponent>(renderFragment);
 
 	/// <summary>
 	/// Renders the <paramref name="renderFragment"/> and returns it as a <see cref="IRenderedFragment"/>.
@@ -86,13 +86,14 @@ public class TestContext : TestContextBase
 	{
 		var renderedComponentActivator = Services.GetRequiredService<IRenderedComponentActivator>();
 		var logger = Services.GetRequiredService<ILoggerFactory>();
+		var componentRegistry = Services.GetRequiredService<ComponentRegistry>();
 #if !NET5_0_OR_GREATER
-		return new WebTestRenderer(renderedComponentActivator, Services, logger);
+		return new WebTestRenderer(renderedComponentActivator, Services, componentRegistry, logger);
 #else
 		var componentActivator = Services.GetService<IComponentActivator>();
 		return componentActivator is null
-			? new WebTestRenderer(renderedComponentActivator, Services, logger)
-			: new WebTestRenderer(renderedComponentActivator, Services, logger, componentActivator);
+			? new WebTestRenderer(renderedComponentActivator, Services, componentRegistry, logger)
+			: new WebTestRenderer(renderedComponentActivator, Services, componentRegistry, logger, componentActivator);
 #endif
 
 	}

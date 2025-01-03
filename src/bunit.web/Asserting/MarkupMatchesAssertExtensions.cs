@@ -305,6 +305,7 @@ public static class MarkupMatchesAssertExtensions
 		using var renderer = new TestRenderer(
 			actual.Services.GetRequiredService<IRenderedComponentActivator>(),
 			actual.Services.GetRequiredService<TestServiceProvider>(),
+			actual.Services.GetRequiredService<ComponentRegistry>(),
 			actual.Services.GetRequiredService<ILoggerFactory>());
 		var renderedFragment = (IRenderedFragment)renderer.RenderFragment(expected);
 		MarkupMatches(actual, renderedFragment, userMessage);

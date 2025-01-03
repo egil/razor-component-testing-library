@@ -27,6 +27,7 @@ public class TestRenderer : Renderer, ITestRenderer
 	private readonly List<RootComponent> rootComponents = new();
 	private readonly ILogger<TestRenderer> logger;
 	private readonly IRenderedComponentActivator activator;
+	private readonly ComponentRegistry registry;
 	private bool disposed;
 	private TaskCompletionSource<Exception> unhandledExceptionTsc = new(TaskCreationOptions.RunContinuationsAsynchronously);
 	private Exception? capturedUnhandledException;
@@ -83,31 +84,34 @@ public class TestRenderer : Renderer, ITestRenderer
 	/// <summary>
 	/// Initializes a new instance of the <see cref="TestRenderer"/> class.
 	/// </summary>
-	public TestRenderer(IRenderedComponentActivator renderedComponentActivator, TestServiceProvider services, ILoggerFactory loggerFactory)
+	public TestRenderer(IRenderedComponentActivator renderedComponentActivator, TestServiceProvider services, ComponentRegistry registry, ILoggerFactory loggerFactory)
 		: base(services, loggerFactory)
 	{
 		logger = loggerFactory.CreateLogger<TestRenderer>();
 		this.activator = renderedComponentActivator;
+		this.registry = registry;
 	}
 #elif NET5_0_OR_GREATER
 	/// <summary>
 	/// Initializes a new instance of the <see cref="TestRenderer"/> class.
 	/// </summary>
-	public TestRenderer(IRenderedComponentActivator renderedComponentActivator, TestServiceProvider services, ILoggerFactory loggerFactory)
+	public TestRenderer(IRenderedComponentActivator renderedComponentActivator, TestServiceProvider services, ComponentRegistry registry, ILoggerFactory loggerFactory)
 		: base(services, loggerFactory, new BunitComponentActivator(services, services.GetRequiredService<ComponentFactoryCollection>(), null))
 	{
 		logger = loggerFactory.CreateLogger<TestRenderer>();
 		this.activator = renderedComponentActivator;
+		this.registry = registry;
 	}
 
 	/// <summary>
 	/// Initializes a new instance of the <see cref="TestRenderer"/> class.
 	/// </summary>
-	public TestRenderer(IRenderedComponentActivator renderedComponentActivator, TestServiceProvider services, ILoggerFactory loggerFactory, IComponentActivator componentActivator)
+	public TestRenderer(IRenderedComponentActivator renderedComponentActivator, TestServiceProvider services, ILoggerFactory loggerFactory, ComponentRegistry registry, IComponentActivator componentActivator)
 		: base(services, loggerFactory, new BunitComponentActivator(services, services.GetRequiredService<ComponentFactoryCollection>(), componentActivator))
 	{
 		logger = loggerFactory.CreateLogger<TestRenderer>();
 		this.activator = renderedComponentActivator;
+		this.registry = registry;
 	}
 #endif
 
@@ -226,6 +230,7 @@ public class TestRenderer : Renderer, ITestRenderer
 			});
 
 			rootComponents.Clear();
+			registry.Clear();
 			AssertNoUnhandledExceptions();
 		}
 	}

@@ -45,6 +45,9 @@ public static class TestServiceProviderExtensions
 		services.AddSingleton<FakeWebAssemblyHostEnvironment>();
 		services.AddSingleton<IWebAssemblyHostEnvironment>(s => s.GetRequiredService<FakeWebAssemblyHostEnvironment>());
 
+		services.AddSingleton<ComponentRouteParameterService>();
+		services.AddSingleton<ComponentRegistry>();
+
 #if NET8_0_OR_GREATER
 		// bUnits fake ScrollToLocationHash
 		services.AddSingleton<IScrollToLocationHash, BunitScrollToLocationHash>();
